@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mar 09, 17:10:08
-@last modified : 2021 Mar 09, 19:48:00
+@last modified : 2021 Mar 11, 20:32:14
 """
 
 import numpy as np
@@ -154,6 +154,8 @@ def getSupport(prefix, itemsets):
 
 def fpgrowth(dataset: Dataset, minFrequency):
     def miner(table, minSupport, prefix, prefixTracker):
+        if table is None:
+            return 
         sorted_per_freq = sorted(
             list(table.items()), key=lambda l: l[1][0]
         )  # Sort by decreasing frequencies
@@ -166,8 +168,7 @@ def fpgrowth(dataset: Dataset, minFrequency):
             condPaths, frequencies = prefixPath(item, table)
             condTree, newTable = constructTree(condPaths, frequencies, minSupport)
             newFreq = retrieveFreq(newPrefix, table)
-            if newTable is not None:
-                miner(newTable, minSupport, newPrefix, prefixTracker)
+            miner(newTable, minSupport, newPrefix, prefixTracker)
 
     prefixTracker = []
     itemsets = dataset._transactions
@@ -192,8 +193,8 @@ if __name__ == "__main__":
     import os
 
     datasets = os.path.join(os.curdir, "Datasets")
-    fname = os.path.join(datasets, "toy.dat")
+    fname = os.path.join(datasets, "retail.dat")
 
     db = Dataset(fname)
 
-    freq = fpgrowth(db, 0.5)
+    freq = fpgrowth(db, 0.1)
