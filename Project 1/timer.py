@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mar 12, 17:12:39
-@last modified : 2021 Mar 12, 17:21:34
+@last modified : 2021 Mar 12, 17:46:19
 """
 
 from frequent_itemset_miner import apriori, alternative_miner
@@ -21,7 +21,7 @@ args = parser.parse_args()
 f = apriori if args.algo == 'apriori' else alternative_miner
 
 tic = perf_counter()
-f(args.filename, args.minfrequency)
+f(args.filename, args.minfrequency, stdout=False)
 tac = perf_counter()
 
 csvvalues = [args.algo, args.filename, str(args.minfrequency), f"{tac-tic}"]

@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mar 07, 13:03:42
-@last modified : 2021 Mar 12, 11:39:13
+@last modified : 2021 Mar 12, 17:45:40
 """
 
 """
@@ -278,17 +278,19 @@ def to_stdout(support_itemset):
         print(str(l) + "(" + str(freq) + ")")
 
 
-def apriori(filepath, minFrequency):
+def apriori(filepath, minFrequency, stdout=True):
     support_itemset = Apriori.apriori(filepath, minFrequency)
-    to_stdout(support_itemset)
+    if stdout:
+        to_stdout(support_itemset)
 #    return support_itemset
 
 
-def alternative_miner(filepath, minFrequency):
+def alternative_miner(filepath, minFrequency, stdout=True):
     """Runs the alternative frequent itemset mining algorithm on the specified file with the given minimum frequency"""
     # TODO: either second implementation of the apriori algorithm or implementation of the depth first search algorithm
     support_itemset = FPgrowth.fpgrowth(filepath, minFrequency)
-    to_stdout(support_itemset)
+    if stdout:
+        to_stdout(support_itemset)
 #    return support_itemset
 
 if __name__ == "__main__":
