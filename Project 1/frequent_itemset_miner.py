@@ -298,7 +298,10 @@ if __name__ == "__main__":
     fname = os.path.join(datasets, "retail.dat")
     db = Dataset(fname)
     
-    for freq in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:    
+    print("RETAIL\n")
+    
+    #for freq in [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]:    
+    for freq in [0.99, 0.98, 0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]:    
         
         tic = time()
         itemsets = apriori(fname, freq)
