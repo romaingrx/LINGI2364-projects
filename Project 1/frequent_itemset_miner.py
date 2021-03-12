@@ -300,9 +300,22 @@ def alternative_miner(filepath, minFrequency):
 if __name__ == '__main__':
     import os
     datasets = os.path.join(os.curdir, "Datasets")
-    fname = os.path.join(datasets, "toy.dat")
-
+    fname = os.path.join(datasets, "accidents.dat")
     db = Dataset(fname)
-    itemsets = apriori(fname, .5)
-    print()
-    itemsets = alternative_miner(fname, .5)
+    
+    for freq in [0.8,0.85,0.9,0.95]:    
+        
+        tic = time()
+       # itemsets = apriori(fname, freq)
+        toc = time()
+        print("Time Apriori : " + str(toc-tic) + ", freq : " + str(freq))
+        
+     #   print()
+        tic = time()
+        itemsets = alternative_miner(fname, freq)
+        toc = time()
+        print("Time Alternative : " + str(toc-tic) + ", freq : " + str(freq))
+        
+        print()
+        print()
+        
