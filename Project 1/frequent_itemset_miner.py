@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mar 07, 13:03:42
-@last modified : 2021 Mar 12, 11:26:32
+@last modified : 2021 Mar 12, 11:39:13
 """
 
 """
@@ -93,16 +93,16 @@ class Apriori:
         return len(cov)
 
     @staticmethod
-    def gen_cand_2(cand_prev):
-        cands = []
+    def generate_candidates(cand_prev):
+        candidates = []
         for i, cand_1 in enumerate(cand_prev):
             for cand_2 in cand_prev[i:]:
-                cand_1 = list(cand_1)
-                cand_2 = list(cand_2)
+                # cand_1 = list(cand_1)
+                # cand_2 = list(cand_2)
                 if cand_1[:-1] == cand_2[:-1] and cand_1 != cand_2:
-                    cand_add = list(cand_1) + [cand_2[-1]]
-                    cands.append(tuple(sorted(cand_add)))
-        return cands
+                    candidate = list(cand_1) + [cand_2[-1]]
+                    candidates.append(tuple(sorted(candidate)))
+        return candidates
 
 
     @staticmethod
@@ -115,7 +115,7 @@ class Apriori:
         candidates = list(tracker.keys()) 
         
         while True:
-            itemsets = Apriori.gen_cand_2(candidates)
+            itemsets = Apriori.generate_candidates(candidates)
             if len(itemsets) == 0:
                 break
 
