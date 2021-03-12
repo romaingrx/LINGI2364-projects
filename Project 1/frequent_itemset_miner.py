@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mar 07, 13:03:42
-@last modified : 2021 Mar 12, 09:29:36
+@last modified : 2021 Mar 12, 11:26:32
 """
 
 """
@@ -30,9 +30,10 @@ __authors__ = "<XXX, Romain Graux, Francois Gouverneur>"
 """
 
 import numpy as np
-from itertools import combinations
-from collections import defaultdict
+from itertools import combinations, chain
+from collections import defaultdict, Counter
 from time import perf_counter as time
+
 
 class Dataset:
     """Utility class to manage a dataset stored in a external file."""
@@ -41,7 +42,7 @@ class Dataset:
         """reads the dataset file and initializes files"""
         self._transactions = list()
         self._items = set()
-#        self._tidlists = defaultdict(list)
+        #        self._tidlists = defaultdict(list)
 
         try:
             lines = [line.strip() for line in open(filepath, "r")]
@@ -51,7 +52,7 @@ class Dataset:
                 self._transactions.append(transaction)
                 for item in transaction:
                     self._items.add(item)
- #                   self._tidlists[item].append(trans_num)
+        #                   self._tidlists[item].append(trans_num)
 
         except IOError as e:
             print("Unable to read dataset file!\n" + e)
@@ -71,66 +72,58 @@ class Dataset:
     def __str__(self):
         return "\n".join([str(t) for t in self._transactions])
 
+
 class Apriori:
     @staticmethod
     def cover(ds, itemset):
-        cov = list()
-        for t, itemsetD in enumerate(ds._transactions):
-            if itemset.issubset(set(itemsetD)):
-                cov.append(t)
+        cov = list(filter(set(itemset).issubset, ds._transactions))
+        #cov = list()
+        #for t, itemsetD in enumerate(ds._transactions):
+        #    if itemset.issubset(set(itemsetD)):
+        #        cov.append(t)
         return cov
-    
+
     @staticmethod
     def support(ds, itemset):
         cov = Apriori.cover(ds, itemset)
         return len(cov)
-    
+
     @staticmethod
-    def create_next_gen(Ck, k):
-        next_gen = []
-        for idx, ca in enumerate(Ck):
-            for cb in Ck[idx+1:]:
-                la = list(ca)[:k-2]; lb = list(cb)[:k-2]
-                la.sort(); lb.sort()
-                if la == lb:
-                    next_gen.append(ca|cb)
-        return np.array(next_gen)
-    
-    @staticmethod
-    def remove_non_supported(ds, Ck, minFrequency):
-        freqs = np.array([Apriori.support(ds, c)/ds.trans_num() for c in Ck])
-        valid = freqs >= minFrequency
-        return Ck[valid], freqs[valid]
-    
-    @staticmethod
-    def createC1(ds):
-        C1 = list(ds._items)
-        C1.sort()
-        return np.array(list(map(frozenset, [[c] for c in C1])))
-    
-    
-    
+    def gen_cand_2(cand_prev):
+        cands = []
+        for i, cand_1 in enumerate(cand_prev):
+            for cand_2 in cand_prev[i:]:
+                cand_1 = list(cand_1)
+                cand_2 = list(cand_2)
+                if cand_1[:-1] == cand_2[:-1] and cand_1 != cand_2:
+                    cand_add = list(cand_1) + [cand_2[-1]]
+                    cands.append(tuple(sorted(cand_add)))
+        return cands
+
+
     @staticmethod
     def apriori(filepath, minFrequency):
         """Runs the apriori algorithm on the specified file with the given minimum frequency"""
         ds = Dataset(filepath)
-        D = list(map(set, ds._transactions))
-        support_itemset = dict()
-    
-        C1 = Apriori.createC1(ds)
-        L, f = Apriori.remove_non_supported(ds, C1, minFrequency)
-    
-        support_itemset.update(dict(zip(L, f)))
-        k = 2
-    
-        while len(L) > 0:
-            C = Apriori.create_next_gen(L, k)
-            L, f = Apriori.remove_non_supported(ds, C, minFrequency)
-            support_itemset.update(dict(zip(L, f)))
-            k += 1
+        
+        items = list(chain(*ds._transactions))
+        items_counter = dict(Counter(items))
+        tracker = {(item,):support/ds.trans_num() for item, support in items_counter.items() if support/ds.trans_num() >= minFrequency}
+        candidates = list(tracker.keys()) 
+        
+        while True:
+            itemsets = Apriori.gen_cand_2(candidates)
+            if len(itemsets) == 0:
+                break
 
-        return support_itemset
+            frequencies = list(map(lambda i:Apriori.support(ds, i)/ds.trans_num(), itemsets))
+            valids = {s:freq for s, freq in zip(itemsets, frequencies) if freq >= minFrequency}
+            candidates = list(valids.keys())
 
+            tracker.update(valids)
+
+        tracker = {frozenset(itemset):freq for itemset, freq in tracker.items()}
+        return tracker
 
 
 class Node:
@@ -151,6 +144,7 @@ class Node:
             s += node.__str__(lvl=lvl + 1)
         return s
 
+
 class FPgrowth:
     @staticmethod
     def updateTable(item, node, table):
@@ -161,8 +155,7 @@ class FPgrowth:
             while runner.next is not None:
                 runner = runner.next
             runner.next = node
-    
-    
+
     @staticmethod
     def updateTree(item, node, table, frequency):
         if item in node.children:
@@ -172,8 +165,7 @@ class FPgrowth:
             node.children[item] = newNode
             FPgrowth.updateTable(item, newNode, table)
         return node.children[item]
-    
-    
+
     @staticmethod
     def constructTree(itemsets, frequencies, minSupport):
         # Construct the frequency table per item
@@ -181,7 +173,7 @@ class FPgrowth:
         for frequency, itemset in zip(frequencies, itemsets):
             for item in itemset:
                 table[item] += frequency
-    
+
         # Drop items below `minSupport`
         table = dict(
             (item, support) for item, support in table.items() if support >= minSupport
@@ -189,9 +181,9 @@ class FPgrowth:
         # Return if nothing is above minSupport
         if len(table) == 0:
             return None, None
-    
+
         table = dict((item, [frequency, None]) for item, frequency in table.items())
-    
+
         # Construct the tree begining with Null root node
         tree = Node("root", 1, None)
         for frequency, itemset in zip(frequencies, itemsets):
@@ -204,32 +196,30 @@ class FPgrowth:
             node = tree
             for item in itemset:
                 node = FPgrowth.updateTree(item, node, table, frequency)
-    
+
         return tree, table
-    
-    
+
     @staticmethod
     def prefixPath(item, table):
         node = table[item][1]
         condPaths = []
         frequencies = []
-    
+
         while node is not None:
             prefixPath = []
-    
+
             runner = node
             while runner.parent is not None:
                 prefixPath.append(runner.name)
                 runner = runner.parent
-    
+
             if len(prefixPath) > 1:
                 condPaths.append(prefixPath[1:])
                 frequencies.append(node._frequency)
-    
+
             node = node.next
         return condPaths, frequencies
-    
-    
+
     @staticmethod
     def getSupport(prefix, itemsets):
         count = 0
@@ -238,50 +228,52 @@ class FPgrowth:
                 count += 1
         return count
 
-    def __call__(self, dataset:Dataset, minFrequency:float):
+    def __call__(self, dataset: Dataset, minFrequency: float):
         return FPgrowth.fpgrowth(dataset, minFrequency)
-    
-    
+
     @staticmethod
     def fpgrowth(filename: str, minFrequency):
         def miner(table, minSupport, prefix, prefixTracker):
             if table is None:
-                return 
+                return
             sorted_per_freq = sorted(
                 list(table.items()), key=lambda l: l[1][0]
             )  # Sort by decreasing frequencies
             items = list(zip(*sorted_per_freq))[0]
-    
+
             for item in items:
                 newPrefix = prefix.copy()
                 newPrefix.add(item)
                 prefixTracker.append(newPrefix)
                 condPaths, frequencies = FPgrowth.prefixPath(item, table)
-                condTree, newTable = FPgrowth.constructTree(condPaths, frequencies, minSupport)
+                condTree, newTable = FPgrowth.constructTree(
+                    condPaths, frequencies, minSupport
+                )
                 miner(newTable, minSupport, newPrefix, prefixTracker)
 
         dataset = Dataset(filename)
-    
+
         prefixTracker = []
         itemsets = dataset._transactions
         minSupport = minFrequency * len(itemsets)
         tree, table = FPgrowth.constructTree(itemsets, [1] * len(itemsets), minSupport)
         miner(table, minSupport, set(), prefixTracker)
-    
+
         support_itemset = dict()
-    
+
         for prefix in prefixTracker:
-            support_itemset[frozenset(prefix)] = FPgrowth.getSupport(prefix, itemsets) / len(itemsets)
-    
+            support_itemset[frozenset(prefix)] = FPgrowth.getSupport(
+                prefix, itemsets
+            ) / len(itemsets)
+
         return support_itemset
+
 
 def to_stdout(support_itemset):
     for itemset, freq in support_itemset.items():
         l = list(itemset)
         l.sort()
-        print(
-                f"[{','.join([str(i) for i in l])}]({freq})"
-                )
+        print(f"[{','.join([str(i) for i in l])}]({freq})")
 
 
 def apriori(filepath, minFrequency):
@@ -290,6 +282,7 @@ def apriori(filepath, minFrequency):
     to_stdout(support_itemset)
     return support_itemset
 
+
 def alternative_miner(filepath, minFrequency):
     """Runs the alternative frequent itemset mining algorithm on the specified file with the given minimum frequency"""
     # TODO: either second implementation of the apriori algorithm or implementation of the depth first search algorithm
@@ -297,8 +290,10 @@ def alternative_miner(filepath, minFrequency):
     to_stdout(support_itemset)
     return support_itemset
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import os
+
     datasets = os.path.join(os.curdir, "Datasets")
     fname = os.path.join(datasets, "accidents.dat")
     db = Dataset(fname)
