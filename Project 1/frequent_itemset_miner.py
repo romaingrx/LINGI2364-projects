@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mar 07, 13:03:42
-@last modified : 2021 Mar 12, 18:55:44
+@last modified : 2021 Mar 12, 22:39:11
 """
 
 """
@@ -177,7 +177,9 @@ class Node:
 
 
 class FPgrowth:
-    """FPgrowth."""
+    """FPgrowth.
+    inspired by : https://github.com/chonyy/fpgrowth_py
+    """
 
     @staticmethod
     def updateTable(item, node, table):
@@ -352,7 +354,7 @@ def to_stdout(support_itemset):
     for itemset, freq in support_itemset.items():
         l = list(itemset)
         l.sort()
-     #   print(str(l) + "(" + str(freq) + ")")
+        print(str(l) + "(" + str(freq) + ")")
 
 
 def apriori(filepath, minFrequency, stdout=True):
@@ -370,34 +372,27 @@ def alternative_miner(filepath, minFrequency, stdout=True):
         to_stdout(support_itemset)
     return support_itemset
 
-if __name__ == "__main__":
-    import os
-
-    datasets = os.path.join(os.curdir, "Datasets")
-    fname = os.path.join(datasets, "toy.dat")
-    db = Dataset(fname)
+if __name__ == '__main__':
+    import argparse
+    from time import perf_counter
     
-    print("TOYS\n")
     
-    #for freq in [0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25]:
-    #for freq in [0.98, 0.96, 0.94, 0.92, 0.9, 0.88, 0.86, 0.84, 0.82, 0.8]:#, 0.45, 0.4, 0.35, 0.3, 0.25]:
-   # for freq in [0.7, 0.675, 0.65, 0.625, 0.6, 0.575, 0.55, 0.525, 0.5, 0.475, 0.45, 0.425, 0.4, 0.375, 0.35, 0.325, 0.3]:
-    for freq in [0.95]:
-        
-        tic = time()
-        itemsets = apriori(fname, freq)
-        toc = time()
-        print("Time Apriori : " + str(toc-tic) + ", freq : " + str(freq))
-        list1 = toc-tic
-        
-        tic = time()
-        itemsets = alternative_miner(fname, freq)
-        toc = time()
-        print("Time Alternative : " + str(toc-tic) + ", freq : " + str(freq))
-        list2 = toc-tic
-        
-        print()
-        print() 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--filename', help='Path to the filename', type=str, required=True)
+    parser.add_argument('-m','--minfrequency', help='Minimum frequency', type=float, required=True)
+    parser.add_argument('-a','--algo', help='Algorithm', choices=['apriori', 'fpgrowth'], type=str, required=True)
+    parser.add_argument('-c','--csv', help='If we want to output as csv format', default=False, action="store_true")
     
-print(list1)
-print(list2)
+    args = parser.parse_args()
+    
+    f = apriori if args.algo == 'apriori' else alternative_miner
+    
+    tic = perf_counter()
+    f(args.filename, args.minfrequency, stdout=not args.csv)
+    elapsed = perf_counter() - tic
+        
+    if args.csv:
+        csvvalues = [args.algo, args.filename, str(args.minfrequency), f"{elapsed}"]
+        print(",".join(csvvalues))
+    else:
+        print(f"... {args.algo} has taken {elapsed:.2e}s for {args.minfrequency} minimum frequency on {args.filename}")

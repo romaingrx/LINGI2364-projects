@@ -33,17 +33,20 @@ if [[ -f $OUT ]] && [[ $FORCE -eq 0 ]]; then
     error "$OUT already exists, please remove it before running benchmark"
 fi
 
-cat timer.py > $SWPPY
+cat frequent_itemset_miner.py > $SWPPY
 
 echo $HEADER > $OUT
 
 echo "run $DATABASE with output $OUT"
 
 for algo in ${ALGOS[@]}; do
-    echo $algo
+    i=1
     for freq in $FREQUENCIES; do
-        python $SWPPY -f $DATABASE -m $freq -a $algo >> $OUT
+        echo -ne "$algo :: $i \r"
+        python $SWPPY -f $DATABASE -m $freq -a $algo -c >> $OUT
+        i=$((i+1))
     done
+    echo  "$algo :: $((i-1))"
 done
 
 if [[ -f $SWPPY ]]; then 
