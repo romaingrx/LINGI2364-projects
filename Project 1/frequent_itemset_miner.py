@@ -106,16 +106,16 @@ class Apriori:
 
 
     @staticmethod
-    def apriori(filepath, minFrequency):
+    def apriori(filepath, minFrequency): 
         ds = Dataset(filepath)
         
-        items = list(chain(*ds._transactions))
-        items_counter = dict(Counter(items))
-        tracker = {(item,):support/ds.trans_num() for item, support in items_counter.items() if support/ds.trans_num() >= minFrequency}
+        items = list(chain(*ds._transactions)) # list items -> mettre transactions à plats
+        items_counter = dict(Counter(items))   # compte chaque item
+        tracker = {(item,):support/ds.trans_num() for item, support in items_counter.items() if support/ds.trans_num() >= minFrequency} # on a tt les items qui respectent la fréquence
         candidates = list(tracker.keys()) 
         
         while True:
-            itemsets = Apriori.generate_candidates(candidates)
+            itemsets = Apriori.generate_candidates(candidates) # generate candidates énumère tt les candidats (check juste si la fin est diff)
             if len(itemsets) == 0:
                 break
 
@@ -123,9 +123,8 @@ class Apriori:
             valids = {s:freq for s, freq in zip(itemsets, frequencies) if freq >= minFrequency}
             candidates = list(valids.keys())
 
-            tracker.update(valids)
+            tracker.update(valids) # rajoute les nouveaux
 
-        tracker = {frozenset(itemset):freq for itemset, freq in tracker.items()}
         return tracker
 
 class Node:
@@ -275,7 +274,7 @@ def to_stdout(support_itemset):
     for itemset, freq in support_itemset.items():
         l = list(itemset)
         l.sort()
-        print(str(l) + "(" + str(freq) + ")")
+     #   print(str(l) + "(" + str(freq) + ")")
 
 
 def apriori(filepath, minFrequency):
@@ -295,23 +294,30 @@ if __name__ == "__main__":
     import os
 
     datasets = os.path.join(os.curdir, "Datasets")
-    fname = os.path.join(datasets, "retail.dat")
+    fname = os.path.join(datasets, "accidents.dat")
     db = Dataset(fname)
     
-    print("RETAIL\n")
+    print("TOYS\n")
     
-    #for freq in [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]:    
-    for freq in [0.99, 0.98, 0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]:    
+    #for freq in [0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25]:
+    #for freq in [0.98, 0.96, 0.94, 0.92, 0.9, 0.88, 0.86, 0.84, 0.82, 0.8]:#, 0.45, 0.4, 0.35, 0.3, 0.25]:
+   # for freq in [0.7, 0.675, 0.65, 0.625, 0.6, 0.575, 0.55, 0.525, 0.5, 0.475, 0.45, 0.425, 0.4, 0.375, 0.35, 0.325, 0.3]:
+    for freq in [0.95]:
         
         tic = time()
         itemsets = apriori(fname, freq)
         toc = time()
         print("Time Apriori : " + str(toc-tic) + ", freq : " + str(freq))
+        list1 = toc-tic
         
         tic = time()
         itemsets = alternative_miner(fname, freq)
         toc = time()
         print("Time Alternative : " + str(toc-tic) + ", freq : " + str(freq))
+        list2 = toc-tic
         
         print()
         print() 
+    
+print(list1)
+print(list2)
