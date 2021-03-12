@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mar 07, 13:03:42
-@last modified : 2021 Mar 12, 22:39:11
+@last modified : 2021 Mar 12, 22:56:28
 """
 
 """
@@ -26,7 +26,7 @@ any order.
 
 Do not change the signature of the apriori and alternative_miner methods as they will be called by the test script.
 
-__authors__ = "<24, Romain Graux, Francois Gouverneur>"
+__authors__ = "24, Romain Graux, Francois Gouverneur>"
 """
 
 import numpy as np
@@ -375,7 +375,6 @@ def alternative_miner(filepath, minFrequency, stdout=True):
 if __name__ == '__main__':
     import argparse
     from time import perf_counter
-    
     
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--filename', help='Path to the filename', type=str, required=True)
