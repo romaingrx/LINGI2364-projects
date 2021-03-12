@@ -34,6 +34,10 @@ from itertools import combinations, chain
 from collections import defaultdict, Counter
 from time import perf_counter as time
 
+"""import itertools
+from re import A
+from tqdm import tqdm
+import json"""
 
 class Dataset:
     """Utility class to manage a dataset stored in a external file."""
@@ -103,7 +107,6 @@ class Apriori:
 
     @staticmethod
     def apriori(filepath, minFrequency):
-        """Runs the apriori algorithm on the specified file with the given minimum frequency"""
         ds = Dataset(filepath)
         
         items = list(chain(*ds._transactions))
@@ -124,7 +127,6 @@ class Apriori:
 
         tracker = {frozenset(itemset):freq for itemset, freq in tracker.items()}
         return tracker
-
 
 class Node:
     def __init__(self, name, frequency, parent):
@@ -273,14 +275,13 @@ def to_stdout(support_itemset):
     for itemset, freq in support_itemset.items():
         l = list(itemset)
         l.sort()
-        print(f"[{','.join([str(i) for i in l])}]({freq})")
+        print(str(l) + "(" + str(freq) + ")")
 
 
 def apriori(filepath, minFrequency):
-    """Runs the apriori algorithm on the specified file with the given minimum frequency"""
     support_itemset = Apriori.apriori(filepath, minFrequency)
     to_stdout(support_itemset)
-    return support_itemset
+#    return support_itemset
 
 
 def alternative_miner(filepath, minFrequency):
@@ -288,29 +289,26 @@ def alternative_miner(filepath, minFrequency):
     # TODO: either second implementation of the apriori algorithm or implementation of the depth first search algorithm
     support_itemset = FPgrowth.fpgrowth(filepath, minFrequency)
     to_stdout(support_itemset)
-    return support_itemset
-
+#    return support_itemset
 
 if __name__ == "__main__":
     import os
 
     datasets = os.path.join(os.curdir, "Datasets")
-    fname = os.path.join(datasets, "accidents.dat")
+    fname = os.path.join(datasets, "retail.dat")
     db = Dataset(fname)
     
-    for freq in [0.8,0.85,0.9,0.95]:    
+    for freq in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:    
         
         tic = time()
-       # itemsets = apriori(fname, freq)
+        itemsets = apriori(fname, freq)
         toc = time()
         print("Time Apriori : " + str(toc-tic) + ", freq : " + str(freq))
         
-     #   print()
         tic = time()
         itemsets = alternative_miner(fname, freq)
         toc = time()
         print("Time Alternative : " + str(toc-tic) + ", freq : " + str(freq))
         
         print()
-        print()
-        
+        print() 
