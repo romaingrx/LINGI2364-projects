@@ -3,58 +3,12 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 09, 15:14:03
-@last modified : 2021 Apr 10, 20:01:56
+@last modified : 2021 Apr 11, 00:51:38
 """
 
 from utils import IO
-
 from collections import defaultdict
-
-
-class IO:
-    @staticmethod
-    def output(dataset, results, fd):
-        def get_negative_positive_support(matches):
-            from bisect import bisect_left
-
-            positive_support = bisect_left(
-                matches, (dataset.n_positive, -1)
-            )  # Get the index of the maximum positive index in the matches
-            negative_support = len(matches) - positive_support
-            return negative_support, positive_support
-
-        for support, pattern, matches in results:
-            n, p = get_negative_positive_support(matches)
-            items = [dataset._int_to_item[integer] for integer in pattern]
-
-            fd.write(f'[{", ".join(items)}] {p} {n} {support}\n')
-
-    @staticmethod
-    def to_stdout(dataset, results):
-        import sys
-
-        IO.output(dataset, results, sys.stdout)
-
-    @staticmethod
-    def to_file(dataset, results, filepath):
-        fd = open(filepath, "w+")
-        IO.output(dataset, results, fd)
-
-    @staticmethod
-    def from_stdin():
-        from argparse import ArgumentParser
-
-        parser = ArgumentParser()
-        parser.add_argument(
-            "positive_filepath", help="Path to the positive file", type=str
-        )
-        parser.add_argument(
-            "negative_filepath", help="Path to the negative file", type=str
-        )
-        parser.add_argument("k", help="The number of top sequential patterns", type=int)
-
-        args = parser.parse_args()
-        return args
+from threading import Thread
 
 
 class Dataset:
@@ -114,6 +68,7 @@ class PrefixSpan:
         self._k = -1
         self._support_counts = defaultdict(int)
         self._results = []
+        self.__threads = []
 
     @property
     def least_best_support(self):
@@ -138,7 +93,17 @@ class PrefixSpan:
         starting_entries = [(i, -1) for i in range(len(self._dataset._db))]
         starting_key = 0
         starting_pattern = []  # Void pattern
-        self._main_recursive(starting_pattern, starting_entries, starting_key)
+
+        # self._main_recursive(starting_pattern, starting_entries, starting_key)
+        first_thread = Thread(
+            target=self._main_recursive,
+            args=(starting_pattern, starting_entries, starting_key),
+        )
+        first_thread.start()
+        self.__threads.append(first_thread)
+
+        for thread in self.__threads:
+            thread.join()
 
         IO.to_stdout(self._dataset, self._results)
 
@@ -164,7 +129,7 @@ class PrefixSpan:
 
         return next_entries_dict
 
-    def _get_score_support(self, match):
+    def _get_score_key(self, match):
         return len(match), len(match)
 
     def _update_results(self, pattern, matches, support):
@@ -204,8 +169,9 @@ class PrefixSpan:
         # Get the next entries (tid, pid)
         new_entries = self.next_entries(matches)
         # Add the score and support for each entry
+        # new_entries_score_support = list(Pool().map(self.next_entries_worker, new_entries.items()))
         new_entries_score_support = [
-            (item, matches, *self._get_score_support(matches))
+            (item, matches, *self._get_score_key(matches))
             for item, matches in new_entries.items()
         ]
         # Sort the entries by score
@@ -216,13 +182,18 @@ class PrefixSpan:
 
             # Already have results for this k and the support is lower than the kth best, prune.
             if self.current_number_of_k == self._k and score < self.least_best_support:
-                continue
+                break
 
             # Current pattern + new item
             new_pattern = pattern + [new_item]
 
             # Call the main function on the new pattern
-            self._main_recursive(new_pattern, new_matches, support)
+            next_thread = Thread(
+                target=self._main_recursive, args=(new_pattern, new_matches, support)
+            )
+            self.__threads.append(next_thread)
+            next_thread.start()
+            # self._main_recursive(new_pattern, new_matches, support)
 
 
 if __name__ == "__main__":

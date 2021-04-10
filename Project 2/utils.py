@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 10, 11:50:37
-@last modified : 2021 Apr 10, 23:02:30
+@last modified : 2021 Apr 11, 00:53:34
 """
 
 
@@ -49,7 +49,9 @@ class IO:
             "negative_filepath", help="Path to the negative file", type=str
         )
         parser.add_argument("k", help="The number of top sequential patterns", type=int)
-        parser.add_argument("-c", "--cprofile", help="Run the cprofiler", type=bool, default=False)
+        parser.add_argument(
+            "-c", "--cprofile", help="Run the cprofiler", type=bool, default=False
+        )
 
         args = parser.parse_args()
         return args
