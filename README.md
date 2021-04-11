@@ -25,13 +25,16 @@ Project 2 : Implementing Sequence Mining
 ---
 
 ```
-usage: {ANY}.py [-h] positive_filepath negative_filepath k
+usage: {0*.py}.py [-h] [-c CPROFILE]
+                              positive_filepath negative_filepath k
 
 positional arguments:
-  positive_filepath  Path to the positive file
-  negative_filepath  Path to the negative file
-  k                  The number of top sequential patterns
+  positive_filepath     Path to the positive file
+  negative_filepath     Path to the negative file
+  k                     The number of top sequential patterns
 
 optional arguments:
-  -h, --help         show this help message and exit
+  -h, --help            show this help message and exit
+  -c CPROFILE, --cprofile CPROFILE
+                        Run the cprofiler
 ```
