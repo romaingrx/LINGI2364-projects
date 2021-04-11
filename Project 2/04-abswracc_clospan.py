@@ -3,15 +3,15 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 11, 15:31:00
-@last modified : 2021 Apr 11, 16:06:08
+@last modified : 2021 Apr 11, 18:27:17
 """
 
-from utils import IO, get_negative_positive_support
+from utils import IO, Dataset, get_negative_positive_support
 from importlib import import_module
-wracc_clospan = import_module("03-wracc_clospan")
-Dataset, WraccCloSpan = wracc_clospan.Dataset, wracc_clospan.WraccCloSpan
+core_clospan = import_module("00-core_clospan")
+CloSpan = core_clospan.CloSpan
 
-class AbsWraccCloSpan(WraccCloSpan):
+class AbsWraccCloSpan(CloSpan):
     def _get_score_key(self, matches, return_supports=False):
         n, p = get_negative_positive_support(
             self._dataset, matches

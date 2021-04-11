@@ -19,6 +19,55 @@ def get_negative_positive_support(dataset, matches):
     negative_support = len(matches) - positive_support
     return negative_support, positive_support
 
+class Dataset:
+    def __init__(self, negative_file, positive_file):
+        self.transactions = []
+        self.unique_items = set()
+
+        def append_transactions(filepath):
+            """append_transactions.
+            Append the transactions contained in the file `filepath`
+
+            :param filepath: a path to the file
+            """
+            starting_length = len(
+                self.transactions
+            )  # Used to get the number of transactions at the end of the function
+            if not self.transactions:  # If we don't have any transactions
+                self.transactions.append([])
+
+            with open(filepath, "r") as fd:
+                lines = [line.strip() for line in fd]
+                for line in lines:
+                    if line:
+                        item = line.split(" ")[0]
+                        self.unique_items.add(item)  # Add unique items in the set
+                        self.transactions[-1].append(item)
+                    elif self.transactions[-1] != []:
+                        self.transactions.append([])
+
+            del self.transactions[-1]  # Because last appended is a void list
+            return (
+                len(self.transactions) - starting_length
+            )  # Return the number of transactions
+
+        self.n_positive = append_transactions(positive_file)
+        self.n_negative = append_transactions(negative_file)
+
+        self._item_to_int = {
+            item: idx for idx, item in enumerate(self.unique_items)
+        }  # Mapping item -> indexes
+        self._int_to_item = {
+            v: k for k, v in self._item_to_int.items()
+        }  # Invert the key value dict to value key
+
+        self._db = [
+            [self._item_to_int[item] for item in transaction]
+            for transaction in self.transactions
+        ]  # Create the database with the transaction items expressed as integer
+
+        # Not needed anymore
+        del self._item_to_int
 
 class IO:
     @staticmethod

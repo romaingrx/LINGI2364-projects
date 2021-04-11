@@ -3,26 +3,18 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 09, 16:22:38
-@last modified : 2021 Apr 11, 12:27:24
+@last modified : 2021 Apr 11, 18:28:32
 """
 
 
 import importlib
-from utils import IO, get_negative_positive_support
-sumsup = importlib.import_module("01-sumsup_prefixspan")
-Dataset, PrefixSpan = sumsup.Dataset, sumsup.PrefixSpan
+from utils import IO, Dataset, get_negative_positive_support
+core_prefixspan = importlib.import_module("00-core_prefixspan")
+PrefixSpan = core_prefixspan.PrefixSpan
 
 
 class WraccPrefixSpan(PrefixSpan):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        N, P = (
-            self._dataset.n_negative,
-            self._dataset.n_positive,
-        )  # Get the total number of negative and positive transactions
-        self.positive_part = N / (N + P) ** 2
-        self.negative_part = P / (N + P) ** 2
     def _get_score_key(self, matches, return_supports=False):
         n, p = get_negative_positive_support(
             self._dataset, matches
