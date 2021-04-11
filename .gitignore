@@ -141,6 +141,6 @@ cython_debug/
 *.swp
 
 # Personal files
-Project\ 1/Other
-Project\ 1/Datasets
+*/Other
+*/Datasets
 
