@@ -26,4 +26,4 @@ case $2 in
         load_files "Reuters" "earn.txt" "acq.txt";;
 esac
 
-python $1 "${POSITIVE}" "${NEGATIVE}" $3 -c $4
+python $1 "${POSITIVE}" "${NEGATIVE}" "$3" -c "$4"

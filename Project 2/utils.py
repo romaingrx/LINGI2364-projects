@@ -3,9 +3,12 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 10, 11:50:37
-@last modified : 2021 Apr 11, 00:53:34
+@last modified : 2021 Apr 11, 12:56:57
 """
 
+def starfilter(func, iterable):
+    star_func = lambda arg:func(*arg)
+    return filter(star_func, iterable)
 
 def get_negative_positive_support(dataset, matches):
     from bisect import bisect_left
@@ -20,7 +23,7 @@ def get_negative_positive_support(dataset, matches):
 class IO:
     @staticmethod
     def output(dataset, results, fd):
-        for support, pattern, matches in results:
+        for support, pattern, matches, *_ in results:
             n, p = get_negative_positive_support(dataset, matches)
             items = [dataset._int_to_item[integer] for integer in pattern]
 
@@ -50,7 +53,7 @@ class IO:
         )
         parser.add_argument("k", help="The number of top sequential patterns", type=int)
         parser.add_argument(
-            "-c", "--cprofile", help="Run the cprofiler", type=bool, default=False
+                "-c", "--cprofile", help="Run the cprofiler", type=lambda x: (str(x).lower() in ['true', '1']), default=False
         )
 
         args = parser.parse_args()

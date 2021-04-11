@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 09, 15:14:03
-@last modified : 2021 Apr 11, 00:51:38
+@last modified : 2021 Apr 11, 11:54:42
 """
 
 from utils import IO
@@ -66,12 +66,12 @@ class PrefixSpan:
     def __init__(self, dataset: Dataset):
         self._dataset = dataset
         self._k = -1
-        self._support_counts = defaultdict(int)
+        self._score_counts = defaultdict(int)
         self._results = []
-        self.__threads = []
+        self._threads = []
 
     @property
-    def least_best_support(self):
+    def least_best_score(self):
         """least_best_support.
         :return: the value of the least best support
         """
@@ -82,7 +82,7 @@ class PrefixSpan:
         """current_number_of_k.
         :return: the number of current supports
         """
-        return len(self._support_counts)
+        return len(self._score_counts)
 
     def __call__(self, k):
         # for l in range(1, k+1):
@@ -95,15 +95,16 @@ class PrefixSpan:
         starting_pattern = []  # Void pattern
 
         # self._main_recursive(starting_pattern, starting_entries, starting_key)
-        first_thread = Thread(
+        main_thread = Thread(
             target=self._main_recursive,
             args=(starting_pattern, starting_entries, starting_key),
+            daemon=False # Waiting all threads
         )
-        first_thread.start()
-        self.__threads.append(first_thread)
+        main_thread.start()
+        main_thread.join()
 
-        for thread in self.__threads:
-            thread.join()
+        for thread in self._threads:
+             thread.join()
 
         IO.to_stdout(self._dataset, self._results)
 
@@ -132,34 +133,34 @@ class PrefixSpan:
     def _get_score_key(self, match):
         return len(match), len(match)
 
-    def _update_results(self, pattern, matches, support):
+    def _update_results(self, pattern, matches, score):
         from bisect import insort
 
         # If the result is already contained in the results OR \
         #        we already have `k` support values AND the support is lower than the least best support we already have
         if (
-            (support, pattern, matches) in self._results
+            (score, pattern, matches) in self._results
             or self.current_number_of_k == self._k
-            and support < self.least_best_support
+            and score < self.least_best_score
         ):
             return
 
         # Increment the number of results for this support
-        self._support_counts[support] += 1
+        self._score_counts[score] += 1
 
-        # If we already have `k` support values but the support is greater than the least best support we already have,
-        # we have to delete the current least best support results
+        # If we already have `k` score values but the score is greater than the least best score we already have,
+        # we have to delete the current least best score results
         if self.current_number_of_k == self._k + 1:
-            number_of_least_best_results = self._support_counts[
-                self.least_best_support
-            ]  # Get the number of results for the least best support values
-            del self._support_counts[self.least_best_support]  # Delete this support
+            number_of_least_best_results = self._score_counts[
+                self.least_best_score
+            ]  # Get the number of results for the least best score values
+            del self._score_counts[self.least_best_score]  # Delete this score
             self._results = self._results[
                 number_of_least_best_results:
             ]  # Keep all results but the least best results
 
         # Add the new result when keeping the order of the results
-        insort(self._results, (support, pattern, matches))
+        insort(self._results, (score, pattern, matches))
 
     def _main_recursive(self, pattern, matches, support):
         # If we have a pattern, update the results list
@@ -181,7 +182,7 @@ class PrefixSpan:
         for new_item, new_matches, score, support in new_entries_score_support:
 
             # Already have results for this k and the support is lower than the kth best, prune.
-            if self.current_number_of_k == self._k and score < self.least_best_support:
+            if self.current_number_of_k == self._k and score < self.least_best_score:
                 break
 
             # Current pattern + new item
@@ -189,9 +190,9 @@ class PrefixSpan:
 
             # Call the main function on the new pattern
             next_thread = Thread(
-                target=self._main_recursive, args=(new_pattern, new_matches, support)
+                target=self._main_recursive, args=(new_pattern, new_matches, support), daemon=True
             )
-            self.__threads.append(next_thread)
+            self._threads.append(next_thread)
             next_thread.start()
             # self._main_recursive(new_pattern, new_matches, support)
 
