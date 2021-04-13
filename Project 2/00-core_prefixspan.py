@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 11, 18:06:20
-@last modified : 2021 Apr 11, 18:11:39
+@last modified : 2021 Apr 13, 11:05:09
 """
 
 from utils import IO
@@ -18,6 +18,12 @@ class PrefixSpan:
         self._score_counts = defaultdict(int)
         self._results = []
         self._threads = []
+        N, P = (
+            self._dataset.n_negative,
+            self._dataset.n_positive,
+        )  # Get the total number of negative and positive transactions
+        self.positive_part = N / (N + P) ** 2
+        self.negative_part = P / (N + P) ** 2
 
     @property
     def least_best_score(self):

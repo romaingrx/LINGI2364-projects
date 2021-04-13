@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 11, 18:14:15
-@last modified : 2021 Apr 11, 18:20:12
+@last modified : 2021 Apr 13, 11:04:59
 """
 
 from importlib import import_module
@@ -18,12 +18,6 @@ class CloSpan(PrefixSpan):
     def __init__(self, ds):
         super(CloSpan, self).__init__(ds)
         self._seen_patterns = []
-        N, P = (
-            self._dataset.n_negative,
-            self._dataset.n_positive,
-        )  # Get the total number of negative and positive transactions
-        self.positive_part = N / (N + P) ** 2
-        self.negative_part = P / (N + P) ** 2
 
     def __call__(self, k):
         self._k = k
