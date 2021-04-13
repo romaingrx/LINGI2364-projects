@@ -374,6 +374,8 @@ if __name__ == "__main__":
     import os
 
     datasets = os.path.join(os.curdir, "Datasets")
+   # print(len(datasets._items)) 
+    
     fname = os.path.join(datasets, "toy.dat")
     db = Dataset(fname)
     
