@@ -12,9 +12,9 @@ function load_files() {
     ROOT_DATASET="$ROOT/$1"
     POSITIVE="$ROOT_DATASET/$2"
     NEGATIVE="$ROOT_DATASET/$3"
-    echo -e "${red}LOADING ::${reset} $1"
-    echo "    positive :: $POSITIVE"
-    echo "    negative :: $NEGATIVE"
+    # echo -e "${red}LOADING ::${reset} $1"
+    # echo "    positive :: $POSITIVE"
+    # echo "    negative :: $NEGATIVE"
 }
 
 case $2 in
