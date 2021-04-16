@@ -15,6 +15,8 @@ N_TOTAL=$(($N_PYFILES*$K*3))
 
 # First output the header of the csv
 echo ${HEADER_CSV} > ${OUTPUT_CSV}
+
+# Log 
 echo -ne "          "
 echo "${HEADER_CSV}" | column -t -s ","
 
@@ -25,7 +27,7 @@ for pyfile in ${PY_FILES}; do
 
             tic=$(date +%s.%N)
             # Count the number of top k
-            ntopk=$(./run_algo_dataset ${pyfile} ${dataset} ${k} 0 | wc -l)
+            ntopk=$(./run_algo_dataset.sh ${pyfile} ${dataset} ${k} 0 | wc -l)
             tac=$(date +%s.%N)
 
             # Compute the taken time
