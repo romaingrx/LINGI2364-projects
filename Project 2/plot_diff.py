@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 14, 19:06:36
-@last modified : 2021 Apr 14, 19:38:34
+@last modified : 2021 Apr 16, 22:59:06
 """
 
 
@@ -33,6 +33,7 @@ d2_k20[4, :4] = [4, 10, 9, 8]
 def plot_ltri(mat: np.ndarray, title: str, cbar: bool = False):
     col_names = ["A", "B", "C", "D", "E"]
     mask = np.triu(np.ones(mat.shape)).astype(np.bool_)
+    plt.figure()
     sns.heatmap(
         mat,
         mask=mask,
