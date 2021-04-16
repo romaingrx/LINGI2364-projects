@@ -10,7 +10,7 @@ How to use scripts?
 
 
 ```
-usage: {0*.py}.py [-h] [-c CPROFILE]
+usage: 0[1-5].*.py [-h] [-c CPROFILE]
                               positive_filepath negative_filepath k
 
 positional arguments:
