@@ -3,13 +3,14 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 11, 18:06:20
-@last modified : 2021 Apr 13, 11:05:09
+@last modified : 2021 Apr 16, 16:42:49
 """
 
 from utils import IO
 
 from collections import defaultdict
 from threading import Thread
+
 
 class PrefixSpan:
     def __init__(self, dataset):
@@ -44,35 +45,32 @@ class PrefixSpan:
 
         # Starting entries : all tid with pid set to -1
         starting_entries = [(i, -1) for i in range(len(self._dataset._db))]
-        starting_key = 0
         starting_pattern = []  # Void pattern
 
-        # self._main_recursive(starting_pattern, starting_entries, starting_key)
-        main_thread = Thread(
-            target=self._main_recursive,
-            args=(starting_pattern, starting_entries, starting_key),
-            daemon=False # Waiting all threads
-        )
-        main_thread.start()
-        main_thread.join()
+        # Start the main process with void pattern
+        self._main_recursive(starting_pattern, starting_entries)
 
+        # Wait all threads
         for thread in self._threads:
-             thread.join()
+            thread.join()
 
+        # Output the results on the stdout
         IO.to_stdout(self._dataset, self._results)
 
         return self._results
 
     def next_entries(self, entries):
-        next_sequences = (
-            self._dataset._db[k][last_position + 1 :] for k, last_position in entries
-        )
+        # Get the next sequences based on the actual entries (pid+1: for each previous entries)
+        next_sequences = (self._dataset._db[tid][pid + 1 :] for tid, pid in entries)
 
         next_entries_dict = defaultdict(list)
 
+        # Compute the next lists for each `next_sequences`
         for idx, sequence in enumerate(next_sequences):
+            # Current entries
             tid, pid = entries[idx]
 
+            # Compute the list of elem as the actual transaction identifier and the next pattern identifier
             for next_pid, item in enumerate(sequence, start=(pid + 1)):
                 L = next_entries_dict[item]
 
@@ -82,7 +80,6 @@ class PrefixSpan:
                 L.append((tid, next_pid))
 
         return next_entries_dict
-
 
     def _update_results(self, pattern, matches, score):
         from bisect import insort
@@ -113,7 +110,7 @@ class PrefixSpan:
         # Add the new result when keeping the order of the results
         insort(self._results, (score, pattern, matches))
 
-    def _main_recursive(self, pattern, matches, support):
+    def _main_recursive(self, pattern, matches, support=0):
         # If we have a pattern, update the results list
         if len(pattern) > 0:
             self._update_results(pattern, matches, support)
@@ -141,10 +138,15 @@ class PrefixSpan:
 
             # Call the main function on the new pattern
             next_thread = Thread(
-                target=self._main_recursive, args=(new_pattern, new_matches, support), daemon=True
+                target=self._main_recursive,
+                args=(new_pattern, new_matches, support),
+                daemon=True,
             )
             self._threads.append(next_thread)
             next_thread.start()
 
     def _get_score_key(self, match):
+        """_get_score_key.
+        The abstract method that return the upper bound and the actual score of `matches`
+        """
         abstract

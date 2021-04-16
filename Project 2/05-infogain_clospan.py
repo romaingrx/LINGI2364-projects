@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 11, 16:09:36
-@last modified : 2021 Apr 11, 18:29:53
+@last modified : 2021 Apr 16, 16:22:50
 """
 
 from math import log2
@@ -15,16 +15,22 @@ from importlib import import_module
 core_clospan = import_module("00-core_clospan")
 CloSpan = core_clospan.CloSpan
 
+
 class InfoGainCloSpan(CloSpan):
     def __init__(self, ds):
         super(InfoGainCloSpan, self).__init__(ds)
         P = self._dataset.n_positive
         N = self._dataset.n_negative
+
+        # Compute the information gain value for each (p, n) tuple
         self._information_gain_values = [
             [round(self._information_gain(p, n), 5) for n in range(N + 1)]
             for p in range(P + 1)
         ]
-        self._key_values = [l.copy() for l in self._information_gain_values] # cumulative maximum
+
+        # Compute the upper bound for each (p, n) tuple
+        self._key_values = [l.copy() for l in self._information_gain_values]
+        # Cumulative maximum
         for p in range(P + 1):
             for n in range(N + 1):
                 self._key_values[p][n] = max(
@@ -35,6 +41,7 @@ class InfoGainCloSpan(CloSpan):
 
     def _information_gain(self, p, n):
         def entropy(x):
+            # Take care of the bounds
             if x <= 0 or x >= 1:
                 return 0.0
             return -x * log2(x) - (1 - x) * log2(1 - x)
@@ -42,6 +49,7 @@ class InfoGainCloSpan(CloSpan):
         P = self._dataset.n_positive
         N = self._dataset.n_negative
 
+        # Compute the info gain and consider non definite members as .0
         value = 0.0
         if P + N:
             value += entropy(P / (P + N))

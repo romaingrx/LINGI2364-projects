@@ -3,23 +3,24 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 09, 16:22:38
-@last modified : 2021 Apr 11, 18:28:32
+@last modified : 2021 Apr 16, 15:59:53
 """
 
 
 import importlib
 from utils import IO, Dataset, get_negative_positive_support
+
 core_prefixspan = importlib.import_module("00-core_prefixspan")
 PrefixSpan = core_prefixspan.PrefixSpan
 
 
 class WraccPrefixSpan(PrefixSpan):
-
     def _get_score_key(self, matches, return_supports=False):
         n, p = get_negative_positive_support(
             self._dataset, matches
         )  # Get negative and positive support of `matches`
 
+        # Compute the wracc score
         positive_part = p * self.positive_part
         negative_part = n * self.negative_part
         wracc = positive_part - negative_part
@@ -28,13 +29,16 @@ class WraccPrefixSpan(PrefixSpan):
         if p == 0:
             positive_part = -negative_part / n
 
+        # Return the upper bound and wracc score
         if return_supports:
+            # Returned supports are needed for CloSpan algo
             return round(positive_part, 5), round(wracc, 5), p, n
         return round(positive_part, 5), round(wracc, 5)
 
 
 if __name__ == "__main__":
     import cProfile, pstats
+
     args = IO.from_stdin()
     ds = Dataset(args.negative_filepath, args.positive_filepath)
     algo = WraccPrefixSpan(ds)
