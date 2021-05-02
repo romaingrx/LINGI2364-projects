@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mai 02, 11:32:43
-@last modified : 2021 Mai 02, 15:12:10
+@last modified : 2021 Mai 02, 16:02:15
 """
 
 from __future__ import absolute_import
@@ -183,52 +183,7 @@ class FrequentPositiveGraphs(PatternGraphs):
         return [numpy.array(matrix).transpose() for matrix in matrices]
 
 
-def find_subgraphs():
-    """
-    Runs gSpan with the specified positive and negative graphs, finds all frequent subgraphs in the positive class
-    with a minimum positive support of minsup and prints them.
-    """
-
-    from argparse import ArgumentParser
-
-    parser = ArgumentParser("Find subgraphs")
-    parser.add_argument("positive_file", type=str)
-    parser.add_argument("negative_file", type=str)
-    parser.add_argument("top_k", type=int)
-    parser.add_argument("min_supp", type=int)
-    args = parser.parse_args()
-
-    if not os.path.exists(args.positive_file):
-        print("{} does not exist.".format(args.positive_file))
-        sys.exit()
-    if not os.path.exists(args.negative_file):
-        print("{} does not exist.".format(args.negative_file))
-        sys.exit()
-
-    graph_database = GraphDatabase()  # Graph database object
-    pos_ids = graph_database.read_graphs(
-        args.positive_file
-    )  # Reading positive graphs, adding them to database and getting ids
-    neg_ids = graph_database.read_graphs(
-        args.negative_file
-    )  # Reading negative graphs, adding them to database and getting ids
-
-    subsets = [
-        pos_ids,
-        neg_ids,
-    ]  # The ids for the positive and negative labelled graphs in the database
-    task = FrequentPositiveGraphs(
-        args.min_supp, graph_database, subsets, args.top_k
-    )  # Creating task
-
-    gSpan(task).run()  # Running gSpan
-
-    # Printing frequent patterns along with their positive support:
-    for (confidence, frequency), dfs_code in task.patterns:
-        print("{} {} {}".format(dfs_code, confidence, frequency))
-
-
-def train_evaluate_model():
+def train_evaluate_decision_tree():
     """
     Runs gSpan with the specified positive and negative graphs; finds all frequent subgraphs in the training subset of
     the positive class with a minimum support of minsup.
@@ -340,4 +295,4 @@ def train_and_evaluate(minsup, database, subsets, top_k):
 
 
 if __name__ == "__main__":
-    train_evaluate_model()
+    train_evaluate_decision_tree()
