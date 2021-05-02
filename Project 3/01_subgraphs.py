@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mai 02, 11:32:43
-@last modified : 2021 Mai 02, 13:02:59
+@last modified : 2021 Mai 02, 14:49:14
 """
 
 from __future__ import absolute_import
@@ -14,9 +14,9 @@ import os
 import sys
 import numpy
 from bisect import insort
-from collections import defaultdict
-from sklearn import naive_bayes
 from sklearn import metrics
+from sklearn import naive_bayes
+from collections import defaultdict
 
 from gspan_mining import gSpan
 from gspan_mining import GraphDatabase
@@ -105,10 +105,10 @@ class FrequentPositiveGraphs(PatternGraphs):
         """
         score = (c, f)
 
-        if score < self.least_best_score:
-            return -1
+        if score == self.least_best_score or (c, f) in self._score_counts:
+            return 0
 
-        return 0 if score == self.least_best_score else 1
+        return (-1) ** (score < self.least_best_score)
 
     @property
     def current_number_of_k(self):
@@ -118,8 +118,13 @@ class FrequentPositiveGraphs(PatternGraphs):
         return len(self._score_counts)
 
     def delete_least_best(self):
+        """delete_least_best.
+        delete the least best score in our patterns
+        """
         least_best_score = self.least_best_score
         del self._score_counts[least_best_score]
+
+        self
         self.patterns = list(
             filter(lambda result: result[0] != least_best_score, self.patterns)
         )
