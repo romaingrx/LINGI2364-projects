@@ -1,25 +1,29 @@
 #!/bin/bash
 
-MIN_SUPP=5
+MIN_SUPP=1000
 FOLD=4
-MAX_K=2
-POS="data/molecules-small.pos"
-NEG="data/molecules-small.neg"
+MAX_K=1000
+FREQ=50
+POS="data/molecules.pos"
+NEG="data/molecules.neg"
 
-TOTRUN=$(($FOLD*3*$MAX_K))
-K=$(seq 1 $MAX_K)
+TOTRUN=$(($FOLD*3*20))
+K=$(seq 1 $MAX_K $FREQ)
 
 CMD=".commands"
 CSV="benchmark.csv"
 
 echo "file,k,fold,train_acc,test_acc" > $CSV
 
-algo="Decision Tree"
-
 function launch_(){
     N=0
     CSV="$1"
     file=$(echo $2 | awk '{print $2}')
+    if [[ $2 =~ "--top_k" ]]; then 
+        k=$(echo $2 | awk '{print $7}')
+    else
+        k=$(echo $2 | awk '{print $5}')
+    fi
     for l in $(bash -c "$2" | grep -e "accuracy" -e "fold" | awk '{print $NF}'); do
         case "$N" in 
             "0")
