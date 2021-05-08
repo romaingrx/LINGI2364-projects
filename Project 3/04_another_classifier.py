@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mai 02, 11:32:43
-@last modified : 2021 Mai 02, 19:21:23
+@last modified : 2021 mei 08, 12:10:53
 """
 
 from __future__ import absolute_import
@@ -37,8 +37,8 @@ class PatternGraphs:
         self.gid_subsets = []
 
         self.database = (
-            database
-        )  # A graphdatabase instance: contains the data for the problem.
+            database  # A graphdatabase instance: contains the data for the problem.
+        )
 
     def store(self, dfs_code, gid_subsets):
         """
@@ -197,6 +197,9 @@ def train_evaluate_decision_tree():
     parser.add_argument("positive_file", type=str)
     parser.add_argument("negative_file", type=str)
     parser.add_argument("n_folds", type=int)
+    parser.add_argument("-k", "--top_k", type=int, default=25)
+    parser.add_argument("-s", "--min_supp", type=int, default=5)
+    parser.add_argument("-b", "--benchmark", action="store_true")
     args = parser.parse_args()
 
     if not os.path.exists(args.positive_file):
@@ -214,10 +217,6 @@ def train_evaluate_decision_tree():
         args.negative_file
     )  # Reading negative graphs, adding them to database and getting ids
 
-    top_k = 25
-    p_supp = 0.4
-    min_supp = max(5, p_supp * min(len(pos_ids), len(neg_ids)) / args.n_folds)
-
     # If less than two folds: using the same set as training and test set (note this is not an accurate way to evaluate the performances!)
     if args.n_folds < 2:
         subsets = [
@@ -228,7 +227,7 @@ def train_evaluate_decision_tree():
         ]
         # Printing fold number:
         print("fold {}".format(1))
-        train_and_evaluate(min_supp, graph_database, subsets, top_k)
+        train_and_evaluate(args.min_supp, graph_database, subsets, args.top_k, args)
 
     # Otherwise: performs k-fold cross-validation:
     else:
@@ -253,10 +252,10 @@ def train_evaluate_decision_tree():
             ]
             # Printing fold number:
             print("fold {}".format(i + 1))
-            train_and_evaluate(min_supp, graph_database, subsets, top_k)
+            train_and_evaluate(args.min_supp, graph_database, subsets, args.top_k, args)
 
 
-def train_and_evaluate(minsup, database, subsets, top_k):
+def train_and_evaluate(minsup, database, subsets, top_k, args=None):
     task = FrequentPositiveGraphs(minsup, database, subsets, top_k)  # Creating task
 
     gSpan(task).run()  # Running gSpan
@@ -292,6 +291,18 @@ def train_and_evaluate(minsup, database, subsets, top_k):
         print("{} {} {}".format(dfs_code, confidence, frequency))
     # printing classification results:
     print(predicted.tolist())
+
+    if args and args.benchmark:
+        train_predicted = classifier.predict(
+            train_fm
+        )  # Using model to predict labels of testing data
+
+        train_accuracy = metrics.accuracy_score(
+            train_labels, train_predicted
+        )  # Computing accuracy:
+
+        print("train accuracy: {}".format(train_accuracy))
+
     print("accuracy: {}".format(accuracy))
     print()  # Blank line to indicate end of fold.
 

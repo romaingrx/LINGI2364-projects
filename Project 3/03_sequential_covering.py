@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mai 02, 15:58:06
-@last modified : 2021 Mai 02, 19:04:45
+@last modified : 2021 mei 08, 11:22:36
 """
 
 from __future__ import absolute_import
@@ -38,8 +38,8 @@ class PatternGraphs:
         self.gid_subsets = []
 
         self.database = (
-            database
-        )  # A graphdatabase instance: contains the data for the problem.
+            database  # A graphdatabase instance: contains the data for the problem.
+        )
 
     def store(self, dfs_code, gid_subsets):
         """
@@ -205,6 +205,7 @@ def train_evaluate_sequential_covering():
     parser.add_argument("top_k", type=int)
     parser.add_argument("min_supp", type=int)
     parser.add_argument("n_folds", type=int)
+    parser.add_argument("-b", "--benchmark", action="store_true")
     args = parser.parse_args()
 
     if not os.path.exists(args.positive_file):
@@ -232,7 +233,7 @@ def train_evaluate_sequential_covering():
         ]
         # Printing fold number:
         print("fold {}".format(1))
-        train_and_evaluate(args.min_supp, graph_database, subsets, args.top_k)
+        train_and_evaluate(args.min_supp, graph_database, subsets, args.top_k, args)
 
     # Otherwise: performs k-fold cross-validation:
     else:
@@ -257,7 +258,7 @@ def train_evaluate_sequential_covering():
             ]
             # Printing fold number:
             print("fold {}".format(i + 1))
-            train_and_evaluate(args.min_supp, graph_database, subsets, args.top_k)
+            train_and_evaluate(args.min_supp, graph_database, subsets, args.top_k, args)
 
 
 def remove(list1, list2):
@@ -268,9 +269,12 @@ def remove(list1, list2):
     return list2
 
 
-def train_and_evaluate(minsup, database, subsets, top_k):
+def train_and_evaluate(minsup, database, subsets, top_k, args=None):
     y_test = [(item, 1) for item in subsets[1]] + [(item, -1) for item in subsets[3]]
     y_test.sort()
+
+    y_train = [(item, 1) for item in subsets[0]] + [(item, -1) for item in subsets[2]]
+    y_train.sort()
 
     sc_subsets = [
         subset.tolist() if type(subset) != list else subset.copy() for subset in subsets
@@ -278,6 +282,7 @@ def train_and_evaluate(minsup, database, subsets, top_k):
 
     rules = list()
     y_test_predicted = list()
+    y_train_predicted = list()
 
     for k in range(top_k):
         task = FrequentPositiveGraphs(minsup, database, sc_subsets, 1)
@@ -294,12 +299,18 @@ def train_and_evaluate(minsup, database, subsets, top_k):
             for item in gid_subsets[1] + gid_subsets[3]:
                 insort(y_test_predicted, (item, label))
 
+            for item in gid_subsets[0] + gid_subsets[2]:
+                insort(y_train_predicted, (item, label))
+
             sc_subsets = remove(gid_subsets, sc_subsets)
 
     default_label = 1 if len(sc_subsets[0]) >= len(sc_subsets[2]) else -1
 
     for item in sc_subsets[1] + sc_subsets[3]:
         insort(y_test_predicted, (item, default_label))
+
+    for item in sc_subsets[0] + sc_subsets[2]:
+        insort(y_train_predicted, (item, default_label))
 
     for (confidence, frequency), dfs_code, _, _ in rules:
         print(f"{dfs_code} {confidence} {frequency}")
@@ -310,6 +321,12 @@ def train_and_evaluate(minsup, database, subsets, top_k):
     accuracy = sum(t == p for t, p in zip(y_test, y_test_predicted)) / len(
         y_test_predicted
     )
+    if args and args.benchmark:
+        train_accuracy = sum(t == p for t, p in zip(y_train, y_train_predicted)) / len(
+            y_train_predicted
+        )
+        print(f"train accuracy: {train_accuracy}")
+
     print(f"accuracy: {accuracy}")
 
     print()
