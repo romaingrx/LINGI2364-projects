@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 11, 12:14:03
-@last modified : 2021 Apr 11, 18:25:28
+@last modified : 2021 Apr 16, 18:39:14
 """
 
 from importlib import import_module
@@ -16,10 +16,10 @@ wracc_prefixspan = import_module("02-wracc_prefixspan")
 WraccPrefixSpan = wracc_prefixspan.WraccPrefixSpan
 
 
-class WraccCloSPan(CloSpan, WraccPrefixSpan):
+class WraccCloSpan(CloSpan, WraccPrefixSpan):
     # Get all methods from CloSpan + _get_score_key from WraccPrefixSpan
     def __init__(self, ds):
-        super(WraccCloSPan, self).__init__(ds)
+        super(WraccCloSpan, self).__init__(ds)
 
 
 if __name__ == "__main__":
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     args = IO.from_stdin()
     ds = Dataset(args.negative_filepath, args.positive_filepath)
-    algo = WraccCloSPan(ds)
+    algo = WraccCloSpan(ds)
     if args.cprofile:
         profiler = cProfile.Profile()
         profiler.enable()

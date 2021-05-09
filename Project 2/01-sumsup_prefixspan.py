@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 09, 15:14:03
-@last modified : 2021 Apr 11, 18:12:55
+@last modified : 2021 Apr 16, 15:56:32
 """
 
 from importlib import import_module
@@ -15,6 +15,7 @@ PrefixSpan = core_prefixspan.PrefixSpan
 
 class SumSupPrefixSpan(PrefixSpan):
     def _get_score_key(self, matches):
+        # the sum of both negative and positive supports for the upper bound and key
         return len(matches), len(matches)
 
 

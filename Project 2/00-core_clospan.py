@@ -3,16 +3,17 @@
 """
 @author : Romain Graux
 @date : 2021 Apr 11, 18:14:15
-@last modified : 2021 Apr 13, 11:04:59
+@last modified : 2021 Apr 16, 16:36:43
 """
 
 from importlib import import_module
-from collections import defaultdict
 from itertools import combinations
 from threading import Thread
-from utils import IO, get_negative_positive_support, starfilter
+from utils import IO, starfilter
+
 core_prefixspan = import_module("00-core_prefixspan")
 PrefixSpan = core_prefixspan.PrefixSpan
+
 
 class CloSpan(PrefixSpan):
     def __init__(self, ds):
@@ -26,17 +27,13 @@ class CloSpan(PrefixSpan):
         starting_entries = [(i, -1) for i in range(len(self._dataset._db))]
         starting_pattern = []  # Void pattern
 
-        main_thread = Thread(
-            target=self._main_recursive,
-            args=(starting_pattern, starting_entries),
-            daemon=False,  # Waiting all threads
-        )
-        main_thread.start()
-        main_thread.join()
+        self._main_recursive(starting_pattern, starting_entries)
 
+        # Wait all threads
         for thread in self._threads:
-             thread.join()
+            thread.join()
 
+        # Last filter to keep only closed patterns
         self._results = list(
             starfilter(
                 lambda s, pattern, m, p, n: self._is_closed(pattern, p, n),
@@ -44,15 +41,17 @@ class CloSpan(PrefixSpan):
             )
         )
 
+        # Output results on stdout
         IO.to_stdout(self._dataset, self._results)
 
         return self._results
 
     def _contains(self, a, b):
-        return tuple(a) in combinations(b, len(a))
+        return tuple(a) in combinations(b, len(a))  # Check if b contains a
 
     def _is_closed(self, pattern, p, n):
         for result_support, result_pattern, _, result_p, result_n in self._results:
+            # If pattern shares all values, is smaller and is contained in the result_pattern :: False
             if (
                 p == result_p
                 and n == result_n
@@ -63,15 +62,17 @@ class CloSpan(PrefixSpan):
         return True
 
     def _sum_negative_positive_support(self, matches, p):
+        # sum of all remaining lengths
         ns = sum(
-            [len(self._dataset.transactions[tid]) - pid + 1 for tid, pid in matches[p:]]
+            [len(self._dataset.transactions[tid][pid:]) for tid, pid in matches[p:]]
         )
         ps = sum(
-            [len(self._dataset.transactions[tid]) - pid + 1 for tid, pid in matches[:p]]
+            [len(self._dataset.transactions[tid][pid:]) for tid, pid in matches[:p]]
         )
         return ns, ps
 
     def _prunable(self, pattern, ns, ps):
+        # Check if the pattern is prunable
         for seen_pattern, p, n in self._seen_patterns:
             if n == ns and p == ps and self._contains(pattern, seen_pattern):
                 return True
