@@ -46,6 +46,6 @@ def plot_ltri(mat: np.ndarray, title: str, cbar: bool = False):
     plt.savefig("./results/plots/" + title.replace(" ", "_"), transparent=True)
 
 
-plot_ltri(d0_k5, "Dataset 0, with k=5")
-plot_ltri(d1_k10, "Dataset 1, with k=10")
-plot_ltri(d2_k20, "Dataset 2, with k=20")
+plot_ltri(d0_k5, "Dataset Test (0), with k=5")
+plot_ltri(d1_k10, "Dataset Protein (1), with k=10")
+plot_ltri(d2_k20, "Dataset Reuters (2), with k=20")
