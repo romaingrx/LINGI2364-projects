@@ -2,13 +2,14 @@
 
 MIN_SUPP=1000
 FOLD=4
-MAX_K=1000
+MAX_K=250
 FREQ=50
 POS="data/molecules.pos"
 NEG="data/molecules.neg"
 
 TOTRUN=$(($FOLD*3*20))
-K=$(seq 1 $MAX_K $FREQ)
+K=$(seq 1 $FREQ $MAX_K)
+
 
 CMD=".commands"
 CSV="benchmark.csv"
@@ -66,7 +67,7 @@ done
 export -f launch_
 cat $CMD | parallel -j 20 launch_ $CSV &
 
-# tail -f -n $TOTRUN $CSV | tqdm --total $TOTRUN | wc -l
+tail -f -n $TOTRUN $CSV | tqdm --total $TOTRUN | wc -l
 l=0
 while [ $l -le $TOTRUN ]; do
     l=$(cat $CSV | wc -l)
