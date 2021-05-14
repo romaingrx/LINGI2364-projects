@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mar 07, 13:03:42
-@last modified : 2021 Mar 12, 22:56:28
+@last modified : 2021 Mar 12, 23:39:25
 """
 
 """
@@ -81,12 +81,7 @@ class Apriori:
         :param ds: an instance of Dataset
         :param itemset: a tuple representing an itemset (ex: (a,b,c))
         """
-        cov = list(filter(set(itemset).issubset, ds._transactions))
-        #cov = list()
-        #for t, itemsetD in enumerate(ds._transactions):
-        #    if itemset.issubset(set(itemsetD)):
-        #        cov.append(t)
-        return cov
+        return list(filter(set(itemset).issubset, ds._transactions))
 
     @staticmethod
     def support(ds, itemset):
@@ -111,7 +106,7 @@ class Apriori:
             for b in previous_candidates[i:]:
                 if a[:-1] == b[:-1] and a != b:
                     candidate = list(a) + [b[-1]]
-                    candidates.append(tuple(sorted(candidate)))
+                    candidates.append(tuple(sorted(candidate))) # add them if only the end is different
         return candidates
 
 
@@ -126,21 +121,21 @@ class Apriori:
         assert 0 <= minFrequency <= 1, f"the minimum frequency has to be between 0 and 1, :: {minFrequency}"
         ds = Dataset(filepath)
         
-        items = list(chain(*ds._transactions)) # list items -> mettre transactions à plats
-        items_counter = dict(Counter(items))   # compte chaque item
-        tracker = {(item,):support/ds.trans_num() for item, support in items_counter.items() if support/ds.trans_num() >= minFrequency} # on a tt les items qui respectent la fréquence
-        candidates = list(tracker.keys()) 
+        items = list(chain(*ds._transactions)) # flatten all items contained in the transactions
+        items_counter = dict(Counter(items))   # count the occurences of each item
+        tracker = {(item,):support/ds.trans_num() for item, support in items_counter.items() if support/ds.trans_num() >= minFrequency} # keep itemset if frequency >= minFrequency
+        candidates = list(tracker.keys()) # the good items are kept for being candidates
         
         while True:
-            itemsets = Apriori.generate_candidates(candidates) # generate candidates énumère tt les candidats (check juste si la fin est diff)
-            if len(itemsets) == 0:
+            itemsets = Apriori.generate_candidates(candidates) # generate candidates of the next level
+            if len(itemsets) == 0: # if no candidates, return 
                 break
 
-            frequencies = list(map(lambda i:Apriori.support(ds, i)/ds.trans_num(), itemsets))
-            valids = {s:freq for s, freq in zip(itemsets, frequencies) if freq >= minFrequency}
-            candidates = list(valids.keys())
+            frequencies = list(map(lambda i:Apriori.support(ds, i)/ds.trans_num(), itemsets)) # list the frequency for each new candidate
+            valids = {s:freq for s, freq in zip(itemsets, frequencies) if freq >= minFrequency} # keep the candidates for which the frequency is above minFrequency
+            candidates = list(valids.keys()) # the candidates of this level are kept for generating the next level candidates
 
-            tracker.update(valids) # rajoute les nouveaux
+            tracker.update(valids) # update the whole tracker of valid itemsets
 
         return tracker
 
@@ -241,7 +236,7 @@ class FPgrowth:
 
         table = dict((item, [frequency, None]) for item, frequency in table.items())
 
-        # Construct the tree begining with Null root node
+        # Construct the tree begining with None root node
         tree = Node("root", 1, None)
         for frequency, itemset in zip(frequencies, itemsets):
             itemset = list(
@@ -377,9 +372,10 @@ if __name__ == '__main__':
     from time import perf_counter
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--filename', help='Path to the filename', type=str, required=True)
-    parser.add_argument('-m','--minfrequency', help='Minimum frequency', type=float, required=True)
-    parser.add_argument('-a','--algo', help='Algorithm', choices=['apriori', 'fpgrowth'], type=str, required=True)
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-f', '--filename', help='Path to the filename', type=str, required=True)
+    required.add_argument('-m','--minfrequency', help='Minimum frequency', type=float, required=True)
+    required.add_argument('-a','--algo', help='Algorithm', choices=['apriori', 'fpgrowth'], type=str, required=True)
     parser.add_argument('-c','--csv', help='If we want to output as csv format', default=False, action="store_true")
     
     args = parser.parse_args()
