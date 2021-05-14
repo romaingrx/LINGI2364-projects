@@ -2,8 +2,8 @@
 
 MIN_SUPP=1000
 FOLD=4
-MAX_K=250
-FREQ=50
+MAX_K=100
+FREQ=5
 POS="data/molecules.pos"
 NEG="data/molecules.neg"
 
@@ -53,16 +53,18 @@ function launch(){
             # launch_ $1 "python $1 $POS $NEG $FOLD --top_k $2 --min_supp $MIN_SUPP -b";;
             cmd="python $1 $POS $NEG $FOLD --top_k $2 --min_supp $MIN_SUPP -b";;
     esac
-    echo "$cmd" >> $CMD
+    echo $cmd >> $CMD
 }
 
-echo -n "" > CMD
+echo -n "" > $CMD
 
 for k in $K; do
     launch "02_decision_tree.py" $k
     launch "03_sequential_covering.py" $k
     launch "04_another_classifier.py" $k
 done
+
+echo "Done writting commands"
 
 export -f launch_
 cat $CMD | parallel -j 20 launch_ $CSV &

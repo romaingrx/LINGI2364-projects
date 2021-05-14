@@ -3,7 +3,7 @@
 """
 @author : Romain Graux
 @date : 2021 Mai 02, 11:32:43
-@last modified : 2021 mei 08, 10:57:11
+@last modified : 2021 May 14, 15:26:12
 """
 
 from __future__ import absolute_import
@@ -13,6 +13,7 @@ from __future__ import print_function
 import os
 import sys
 import numpy
+import random
 from bisect import insort
 from sklearn import metrics
 from sklearn import naive_bayes
@@ -284,11 +285,12 @@ def train_and_evaluate(minsup, database, subsets, top_k, args=None):
         test_fm
     )  # Using model to predict labels of testing data
 
-    accuracy = metrics.accuracy_score(test_labels, predicted)  # Computing accuracy:
+    accuracy = metrics.accuracy_score(test_labels, predicted)  # Computing accuracy
 
     # Printing frequent patterns along with their positive support:
     for (confidence, frequency), dfs_code, _ in task.patterns:
         print("{} {} {}".format(dfs_code, confidence, frequency))
+
     # printing classification results:
     print(predicted.tolist())
 
