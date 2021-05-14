@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MIN_SUPP=1000
-FOLD=4
+MIN_SUPP=500
+FOLD=5
 MAX_K=100
 FREQ=5
 POS="data/molecules.pos"
