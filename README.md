@@ -21,6 +21,19 @@ required arguments:
                         Algorithm
 ```
 
+```
+usage: benchmark.sh -f FILENAME -o OUTPUT [--force]
+
+optional arguments:
+  --force             Write to the OUTPUT csv file even if it exists
+
+required arguments:
+  -f FILENAME, --filename FILENAME
+                        Path to the filename dataset
+  -o OUTPUT, --output OUTPUT
+                        The output csv file
+```
+
 Project 2 : Implementing Sequence Mining
 ---
 
@@ -37,4 +50,39 @@ optional arguments:
   -h, --help            show this help message and exit
   -c CPROFILE, --cprofile CPROFILE
                         Run the cprofiler
+```
+
+Project 3 : Classifying Graphs
+---
+
+```
+usage: 0[1-3].*.py [-h] [-b]
+                      positive_file negative_file top_k min_supp n_folds
+
+positional arguments:
+  positive_file
+  negative_file
+  top_k
+  min_supp
+  n_folds
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -b, --benchmark
+```
+
+```
+usage: 04_another_classifier.py [-h] [-k TOP_K] [-s MIN_SUPP] [-b]
+                      positive_file negative_file n_folds
+
+positional arguments:
+  positive_file
+  negative_file
+  n_folds
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k TOP_K, --top_k TOP_K
+  -s MIN_SUPP, --min_supp MIN_SUPP
+  -b, --benchmark
 ```
