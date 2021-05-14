@@ -1,5 +1,5 @@
 
-Project 2 : Implementing Sequence Mining
+Project 3 : Classifying Graphs
 ===
 
 The aim of this project is to train several models to predict labels on patterns in a supervised dataset with sequences.
